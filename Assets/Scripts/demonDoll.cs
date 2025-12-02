@@ -8,6 +8,8 @@ public class demonDoll : MonoBehaviour{
         playerTransform = player.GetComponent<Transform>();
     }
 
+    
+
     // Update is called once per frame
     void Update(){
         
