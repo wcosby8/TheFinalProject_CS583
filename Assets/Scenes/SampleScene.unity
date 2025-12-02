@@ -2314,6 +2314,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &833990693
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.4563472
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2.4563472
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2.4563472
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 167.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.00000023841858
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 236.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4630624516233633055, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334208508590161119, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
+      propertyPath: m_Name
+      value: demonDollRedDress
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3028a77365d404f41ab7fd94b44e58a4, type: 3}
 --- !u!1 &877509516
 GameObject:
   m_ObjectHideFlags: 0
@@ -5675,3 +5744,4 @@ SceneRoots:
   - {fileID: 1187524572}
   - {fileID: 389513155}
   - {fileID: 527993413}
+  - {fileID: 833990693}
