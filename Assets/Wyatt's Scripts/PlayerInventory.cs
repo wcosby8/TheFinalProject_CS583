@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -7,9 +8,12 @@ public class PlayerInventory : MonoBehaviour
 
     public int NumberOfSpheres => numberOfSpheres;
 
+    public UnityEvent<PlayerInventory> OnSphereCollected;
+
     public void SphereCollected()
     {
         numberOfSpheres++;
+        OnSphereCollected.Invoke(this);
     }
 }
 
