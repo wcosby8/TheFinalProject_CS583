@@ -7,21 +7,25 @@
 - Gian P
 - Samir J
 
-## Current Target for Game:
-Our current goal is to create a 3D adventure-style game where the player can move throughout a world, interacting with objects, and completing tasks or challenges.
+## Current Game Focus:
+Our main priorities right now are:
+- Expanding and polishing the 3D environment
+- Implementing a temporary light source mechanic
+- Adding enemy logic so the shadow creature is repelled by light when the player is near
 
-Our main focus right now is:
-- Building a functional 3D world
-- Adding a player controller with movement
-- Creating basic UI elements
-- Implementing lighting thoughout the world
+## Team Responsibilities
+### Wyatt
+- 3D environment design and world layout  
+- Collectables and inventory UI connection
 
-## Current Goals for Each Person:
-### Wyatt:
-- Developing 3D environment
-### Isabella:
-- Creating the UI/Menu elements
-### Gian:
-- Game Coding and Logic
-### Samir:
-- Art and Animation
+### Isabella
+- UI design and menu elements
+- Organizing project structure (GitHub folders, repo setup)
+
+### Gian
+- Game logic and scripting  
+- Enemy behavior, movement, and AI reaction to light
+
+### Samir
+- Art, animation, and visual polish  
+- Supporting environment/props and additional assets
