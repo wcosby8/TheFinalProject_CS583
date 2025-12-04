@@ -7,6 +7,19 @@
 - Gian P
 - Samir J
 
+## Final Goal for the Game
+Our final objective is to create a dark forest survival game where the player must restore light to the environment while avoiding an enemy. The player collects light spheres scattered throughout the map, uses permanent and temporary light sources to stay safe, and ultimately activates all needed light points to cleanse the forest and win the game.
+
+The final game will include:
+- A fully navigable 3D forest environment  
+- A creature that stalks the player but avoids strong light  
+- Permanent light zones(lanterns)  
+- A temporary light source mechanic  
+- Collectables tied to a simple inventory and UI counter  
+- A main menu and end screen  
+- Basic animations, sound, and polished visuals  
+
+
 ## Current Game Focus:
 Our main priorities right now are:
 - Expanding and polishing the 3D environment
