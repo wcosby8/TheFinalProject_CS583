@@ -1,5 +1,6 @@
 # The final project
-
+##Halfway Point Gameplay Video
+- https://us05web.zoom.us/clips/share/D4Sm3_WnQPi4xIY3wjfcjw
 ## Group Members:
 - Wyatt Cosby
 - Isabella Lawlor
