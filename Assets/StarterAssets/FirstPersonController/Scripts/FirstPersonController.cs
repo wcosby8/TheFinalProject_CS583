@@ -42,6 +42,11 @@ namespace StarterAssets
 		public float GroundedRadius = 0.5f;
 		[Tooltip("What layers the character uses as ground")]
 		public LayerMask GroundLayers;
+		
+		[Header("Slope Limit")]
+		[Tooltip("Maximum angle in degrees the player can walk up. 45 = normal, lower = can't climb steep hills")]
+		[Range(0f, 90f)]
+		public float MaxSlopeAngle = 45f;
 
 		[Header("Cinemachine")]
 		[Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
@@ -194,6 +199,52 @@ namespace StarterAssets
 				inputDirection = transform.right * _input.move.x + transform.forward * _input.move.y;
 			}
 
+			// Check if trying to move up a slope that's too steep
+			if (Grounded && _input.move != Vector2.zero)
+			{
+				// Use a more precise check - only check the surface directly beneath the player
+				// Cast from the bottom of the character controller, not from the center
+				RaycastHit hit;
+				Vector3 rayStart = transform.position + Vector3.up * (GroundedOffset + 0.1f);
+				
+				// Shorter, more precise raycast - only check what's directly under the player's feet
+				float rayDistance = Mathf.Abs(GroundedOffset) + 0.5f; // Only check slightly below the controller
+				
+				if (Physics.Raycast(rayStart, Vector3.down, out hit, rayDistance, GroundLayers))
+				{
+					// Make sure the hit is actually the surface we're standing on (not a nearby slope)
+					// Check if the hit point is close to where we expect the ground to be
+					float expectedGroundY = transform.position.y + GroundedOffset;
+					float hitDistance = Mathf.Abs(hit.point.y - expectedGroundY);
+					
+					// Only use this hit if it's close to where we expect the ground (within 0.3 units)
+					if (hitDistance < 0.3f)
+					{
+						// Calculate the angle of the slope
+						float slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
+						
+						// Check if the slope is too steep
+						if (slopeAngle > MaxSlopeAngle)
+						{
+							// Check if we're trying to move up the slope (not down)
+							Vector3 slopeDirection = Vector3.Cross(hit.normal, Vector3.Cross(inputDirection, hit.normal)).normalized;
+							float slopeDot = Vector3.Dot(inputDirection, slopeDirection);
+							
+							// If moving up the slope (positive dot product), prevent movement
+							if (slopeDot > 0.1f)
+							{
+								// Project movement direction onto the slope plane to slide down instead
+								Vector3 projectedDirection = Vector3.ProjectOnPlane(inputDirection, hit.normal).normalized;
+								inputDirection = projectedDirection;
+								
+								// Reduce speed on steep slopes
+								_speed *= 0.3f;
+							}
+						}
+					}
+				}
+			}
+
 			// move the player
 			_controller.Move(inputDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 		}
@@ -211,8 +262,16 @@ namespace StarterAssets
 					_verticalVelocity = -2f;
 				}
 
+				// Check if we're on a steep slope before allowing jump
+				bool canJump = true;
+				float currentSlopeAngle = GetCurrentSlopeAngle();
+				if (currentSlopeAngle > MaxSlopeAngle)
+				{
+					canJump = false;
+				}
+
 				// Jump
-				if (_input.jump && _jumpTimeoutDelta <= 0.0f)
+				if (_input.jump && _jumpTimeoutDelta <= 0.0f && canJump)
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
 					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
@@ -251,6 +310,32 @@ namespace StarterAssets
 			if (lfAngle < -360f) lfAngle += 360f;
 			if (lfAngle > 360f) lfAngle -= 360f;
 			return Mathf.Clamp(lfAngle, lfMin, lfMax);
+		}
+
+		/// <summary>
+		/// Get the angle of the slope the player is currently standing on
+		/// Uses a precise check to only detect the surface directly beneath the player
+		/// </summary>
+		private float GetCurrentSlopeAngle()
+		{
+			RaycastHit hit;
+			Vector3 rayStart = transform.position + Vector3.up * (GroundedOffset + 0.1f);
+			float rayDistance = Mathf.Abs(GroundedOffset) + 0.5f;
+			
+			if (Physics.Raycast(rayStart, Vector3.down, out hit, rayDistance, GroundLayers))
+			{
+				// Make sure the hit is actually the surface we're standing on (not a nearby slope)
+				float expectedGroundY = transform.position.y + GroundedOffset;
+				float hitDistance = Mathf.Abs(hit.point.y - expectedGroundY);
+				
+				// Only use this hit if it's close to where we expect the ground (within 0.3 units)
+				if (hitDistance < 0.3f)
+				{
+					return Vector3.Angle(hit.normal, Vector3.up);
+				}
+			}
+			
+			return 0f;
 		}
 
 		private void OnDrawGizmosSelected()
