@@ -33,6 +33,7 @@ public class SphereDeposit : MonoBehaviour
     private PPlayerInventory playerInventory;
     private GameManager gameManager;
     private StarterAssetsInputs playerInputs;
+    private SphereUI sphereUI;
     private bool playerInRange = false;
     
     [Header("Events")]
@@ -59,6 +60,9 @@ public class SphereDeposit : MonoBehaviour
         
         // Find game manager
         gameManager = FindObjectOfType<GameManager>();
+        
+        // Find sphere UI
+        sphereUI = FindObjectOfType<SphereUI>();
         
         // Hide interaction prompt initially
         if (interactionPrompt != null)
@@ -92,14 +96,14 @@ public class SphereDeposit : MonoBehaviour
         bool wasInRange = playerInRange;
         playerInRange = distance <= interactionRange;
         
-        // Show/hide interaction prompt
+        // Show/hide interaction prompt (always show when in range)
         if (interactionPrompt != null)
         {
-            interactionPrompt.SetActive(playerInRange && playerInventory.NumberOfSpheres > 0);
+            interactionPrompt.SetActive(playerInRange);
         }
         
-        // Update prompt text if it has TextMeshPro or Text component
-        if (playerInRange && playerInventory.NumberOfSpheres > 0)
+        // Update prompt text when in range
+        if (playerInRange)
         {
             UpdateInteractionPrompt();
         }
@@ -110,13 +114,25 @@ public class SphereDeposit : MonoBehaviour
     /// </summary>
     void UpdateInteractionPrompt()
     {
-        if (interactionPrompt == null) return;
+        if (interactionPrompt == null || playerInventory == null) return;
+        
+        string message;
+        
+        // Different message based on whether player has spheres
+        if (playerInventory.NumberOfSpheres > 0)
+        {
+            message = "Press E to deposit sphere";
+        }
+        else
+        {
+            message = "You have no spheres, go find some";
+        }
         
         // Try to find TextMeshPro component
         TMPro.TextMeshProUGUI tmpText = interactionPrompt.GetComponent<TMPro.TextMeshProUGUI>();
         if (tmpText != null)
         {
-            tmpText.text = $"Press {interactKey} to Deposit ({playerInventory.NumberOfSpheres} spheres)";
+            tmpText.text = message;
             return;
         }
         
@@ -124,7 +140,7 @@ public class SphereDeposit : MonoBehaviour
         UnityEngine.UI.Text text = interactionPrompt.GetComponent<UnityEngine.UI.Text>();
         if (text != null)
         {
-            text.text = $"Press {interactKey} to Deposit ({playerInventory.NumberOfSpheres} spheres)";
+            text.text = message;
         }
     }
     
@@ -177,6 +193,12 @@ public class SphereDeposit : MonoBehaviour
         
         // Invoke events
         OnSphereDeposited.Invoke(actualAmount);
+        
+        // Show deposit progress message
+        if (sphereUI != null && gameManager != null)
+        {
+            sphereUI.ShowDepositMessage(gameManager.TotalDepositedSpheres, gameManager.spheresNeededToWin);
+        }
         
         // Check if all spheres are deposited
         if (gameManager != null && gameManager.TotalDepositedSpheres >= 6)

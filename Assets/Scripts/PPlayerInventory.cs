@@ -11,10 +11,24 @@ public class PPlayerInventory : MonoBehaviour
     public UnityEvent<PPlayerInventory> OnSphereCollected;
     public UnityEvent<int> OnSpheresDeposited; // Passes number of spheres deposited
 
+    private SphereUI sphereUI;
+
+    void Start()
+    {
+        // Find sphere UI
+        sphereUI = FindObjectOfType<SphereUI>();
+    }
+
     public void SphereCollected()
     {
         numberOfSpheres++;
         OnSphereCollected.Invoke(this);
+        
+        // Show collection message
+        if (sphereUI != null)
+        {
+            sphereUI.ShowCollectionMessage();
+        }
     }
     
     /// <summary>
