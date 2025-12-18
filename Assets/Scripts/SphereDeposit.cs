@@ -182,6 +182,13 @@ public class SphereDeposit : MonoBehaviour
         // Remove spheres from player inventory
         playerInventory.RemoveSpheres(actualAmount);
         
+        // Decrease demon doll speed when depositing (incentive to deposit)
+        demonDoll demonDollScript = FindFirstObjectByType<demonDoll>();
+        if (demonDollScript != null)
+        {
+            demonDollScript.DecreaseSpeedOnDeposit(actualAmount);
+        }
+        
         // Add to game manager's deposited count
         if (gameManager != null)
         {

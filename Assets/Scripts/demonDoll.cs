@@ -30,6 +30,15 @@ public class demonDoll : MonoBehaviour {
     public float rotationSpeed = 10f;   // How fast the enemy turns to face the player
     public float normalSpeed = 3.5f;    // Normal movement speed
     public float slowedSpeed = 1f;      // Speed when near light (but not in it)
+    [Tooltip("Speed increase per sphere collected")]
+    public float speedIncreasePerSphere = 1f;
+    [Tooltip("Speed decrease per sphere deposited")]
+    public float speedDecreasePerDeposit = 0.5f;
+    
+    private float baseNormalSpeed;       // Store original speed
+    private float baseSlowedSpeed;      // Store original slowed speed
+    private float baseRetreatSpeed;     // Store original retreat speed
+    private float currentSpeedModifier = 0f; // Track current speed modifier (can be fractional)
     
     [Header("Light Avoidance")]
     [Tooltip("Outer radius: inside here the doll is slowed, but still tries to chase the player.")]
@@ -40,6 +49,12 @@ public class demonDoll : MonoBehaviour {
     [Tooltip("Buffer distance beyond detection radius to retreat to (prevents cycling).")]
     public float retreatBuffer = 3f;           // How far beyond detection radius to retreat
     
+    [Header("Player Contact")]
+    [Tooltip("Distance at which demon doll can touch/steal spheres from player")]
+    public float contactDistance = 2f;
+    [Tooltip("Cooldown between contact attempts (seconds)")]
+    public float contactCooldown = 1f;
+    
     private NavMeshAgent agent;
     private List<LightSource> nearbyLights = new List<LightSource>();
     private LightSource closestLight = null;
@@ -47,22 +62,164 @@ public class demonDoll : MonoBehaviour {
     private bool isInDetectionRadius = false;  // Inside outer slow radius (but outside fear radius)
     private bool isRetreating = false;         // Currently retreating from light
     private Vector3 retreatTargetPosition = Vector3.zero;  // Where we're retreating to
+    private int speedIncreaseCount = 0;        // Track how many times speed has been increased
+    private PPlayerInventory playerInventory; // Reference to player inventory
+    private GameManager gameManager;          // Reference to game manager
+    private float contactCooldownTimer = 0f;   // Timer for contact cooldown
+    private int lastKnownSphereCount = 0;      // Track previous sphere count to detect actual collection
 
     void Awake() {
         // Get the NavMeshAgent on this enemy
         agent = GetComponent<NavMeshAgent>();
 
         // If no player is plugged into the Inspector, try finding them by tag
+        GameObject player = null;
         if (playerTransform == null) {
-            GameObject player = GameObject.FindWithTag("Player");
+            player = GameObject.FindWithTag("Player");
             if (player != null)
                 playerTransform = player.transform;
+        }
+        else
+        {
+            player = playerTransform.gameObject;
         }
 
         // We'll rotate manually so the agent doesn't auto-rotate
         if (agent != null) {
             agent.updateRotation = false;
             agent.speed = normalSpeed;
+        }
+        
+        // Store base speeds
+        baseNormalSpeed = normalSpeed;
+        baseSlowedSpeed = slowedSpeed;
+        baseRetreatSpeed = retreatSpeed;
+        
+        // Subscribe to sphere collection events and store references
+        if (player != null)
+        {
+            playerInventory = player.GetComponent<PPlayerInventory>();
+            if (playerInventory != null)
+            {
+                playerInventory.OnSphereCollected.AddListener(OnSphereCollected);
+                playerInventory.OnSpheresDeposited.AddListener(OnSphereStolen);
+                playerInventory.OnSphereStolen.AddListener(OnSphereStolenForRespawn);
+                // Initialize last known count
+                lastKnownSphereCount = playerInventory.NumberOfSpheres;
+            }
+        }
+        
+        // Find game manager
+        gameManager = FindFirstObjectByType<GameManager>();
+    }
+    
+    void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (playerInventory != null)
+        {
+            playerInventory.OnSphereCollected.RemoveListener(OnSphereCollected);
+            playerInventory.OnSpheresDeposited.RemoveListener(OnSphereStolen);
+            playerInventory.OnSphereStolen.RemoveListener(OnSphereStolenForRespawn);
+        }
+    }
+    
+    /// <summary>
+    /// Called when player collects a sphere - increases demon doll speed
+    /// </summary>
+    void OnSphereCollected(PPlayerInventory inventory)
+    {
+        if (inventory == null) return;
+        
+        int currentCount = inventory.NumberOfSpheres;
+        
+        // Only increase speed if sphere count actually increased (not decreased)
+        if (currentCount > lastKnownSphereCount)
+        {
+            speedIncreaseCount++;
+            currentSpeedModifier += speedIncreasePerSphere;
+            
+            // Update all speeds
+            UpdateSpeeds();
+            
+            Debug.Log($"Demon doll speed increased! Normal speed: {normalSpeed}");
+        }
+        
+        // Update last known count
+        lastKnownSphereCount = currentCount;
+    }
+    
+    /// <summary>
+    /// Called when player loses a sphere - updates last known count
+    /// </summary>
+    void OnSphereStolen(int amount)
+    {
+        // Update last known count when spheres are removed
+        if (playerInventory != null)
+        {
+            lastKnownSphereCount = playerInventory.NumberOfSpheres;
+        }
+    }
+    
+    /// <summary>
+    /// Decrease demon doll speed when a sphere is stolen (full decrease)
+    /// </summary>
+    void DecreaseSpeed()
+    {
+        if (speedIncreaseCount > 0)
+        {
+            speedIncreaseCount--;
+            currentSpeedModifier -= speedIncreasePerSphere;
+            
+            // Update all speeds
+            UpdateSpeeds();
+            
+            Debug.Log($"Demon doll speed decreased! Normal speed: {normalSpeed}");
+        }
+    }
+    
+    /// <summary>
+    /// Decrease demon doll speed when spheres are deposited (partial decrease)
+    /// </summary>
+    public void DecreaseSpeedOnDeposit(int sphereCount)
+    {
+        if (currentSpeedModifier > 0f)
+        {
+            float decreaseAmount = speedDecreasePerDeposit * sphereCount;
+            currentSpeedModifier = Mathf.Max(0f, currentSpeedModifier - decreaseAmount);
+            
+            // Update all speeds
+            UpdateSpeeds();
+            
+            Debug.Log($"Demon doll speed decreased by {decreaseAmount} from deposit! Normal speed: {normalSpeed}");
+        }
+    }
+    
+    /// <summary>
+    /// Update all speeds based on current modifier
+    /// </summary>
+    void UpdateSpeeds()
+    {
+        normalSpeed = baseNormalSpeed + currentSpeedModifier;
+        slowedSpeed = baseSlowedSpeed + currentSpeedModifier;
+        retreatSpeed = baseRetreatSpeed + currentSpeedModifier;
+        
+        // Update current speed if agent exists
+        if (agent != null)
+        {
+            // Update speed based on current state
+            if (isInFearRadius)
+            {
+                agent.speed = retreatSpeed;
+            }
+            else if (isInDetectionRadius)
+            {
+                agent.speed = slowedSpeed;
+            }
+            else
+            {
+                agent.speed = normalSpeed;
+            }
         }
     }
 
@@ -96,6 +253,10 @@ public class demonDoll : MonoBehaviour {
 
         // --- 4. Rotation: face the movement direction ---
         UpdateRotation();
+        
+        // --- 5. Check for player contact ---
+        UpdateContactCooldown();
+        CheckPlayerContact();
     }
 
     /// <summary>
@@ -281,6 +442,85 @@ public class demonDoll : MonoBehaviour {
                 targetRotation,
                 rotationSpeed * Time.deltaTime
             );
+        }
+    }
+    
+    /// <summary>
+    /// Update contact cooldown timer
+    /// </summary>
+    void UpdateContactCooldown()
+    {
+        if (contactCooldownTimer > 0f)
+        {
+            contactCooldownTimer -= Time.deltaTime;
+        }
+    }
+    
+    /// <summary>
+    /// Check if demon doll is close enough to touch player and steal sphere/kill
+    /// </summary>
+    void CheckPlayerContact()
+    {
+        if (playerTransform == null || contactCooldownTimer > 0f) return;
+        
+        // Calculate distance to player
+        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+        
+        // Check if within contact distance
+        if (distanceToPlayer <= contactDistance)
+        {
+            HandlePlayerContact();
+        }
+    }
+    
+    /// <summary>
+    /// Handle contact with player - steal sphere or kill
+    /// </summary>
+    void HandlePlayerContact()
+    {
+        if (playerInventory == null) return;
+        
+        // Reset cooldown
+        contactCooldownTimer = contactCooldown;
+        
+        // Check if player has spheres
+        if (playerInventory.NumberOfSpheres > 0)
+        {
+            // Steal one sphere (this will trigger respawn via event)
+            SSphere stolenSphere = playerInventory.StealSphere();
+            
+            // Decrease demon doll speed when stealing
+            DecreaseSpeed();
+            
+            Debug.Log("Demon doll stole a sphere! Remaining: " + playerInventory.NumberOfSpheres);
+        }
+        else
+        {
+            // Player has no spheres - die and reset
+            Debug.Log("Player died! No spheres remaining. Game resetting...");
+            if (gameManager != null)
+            {
+                gameManager.RestartGame();
+            }
+            else
+            {
+                // Fallback: reload scene directly
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
+                );
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Called when a sphere is stolen - respawns it at original location
+    /// </summary>
+    void OnSphereStolenForRespawn(SSphere sphere)
+    {
+        if (sphere != null)
+        {
+            sphere.Respawn();
+            Debug.Log("Sphere respawned at original location");
         }
     }
 }

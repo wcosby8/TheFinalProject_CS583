@@ -817,12 +817,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::demonDoll
   playerTransform: {fileID: 109938731}
   rotationSpeed: 10
-  normalSpeed: 8
+  normalSpeed: 6
   slowedSpeed: 2
+  speedIncreasePerSphere: 1
   lightDetectionRadius: 15
   lightFearRadius: 7
-  retreatSpeed: 12
+  retreatSpeed: 10
   retreatBuffer: 3
+  contactDistance: 2
+  contactCooldown: 1
 --- !u!195 &144947835
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -3645,6 +3648,9 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   OnSpheresDeposited:
+    m_PersistentCalls:
+      m_Calls: []
+  OnSphereStolen:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &454890605
