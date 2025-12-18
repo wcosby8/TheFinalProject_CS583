@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using TMPro;
 
 public class CandleAbility : MonoBehaviour
@@ -14,13 +13,14 @@ public class CandleAbility : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI candleTimerText;
 
+    private bool hasCandle = false;
     private bool isActive = false;
     private bool onCooldown = false;
 
     private float activeTimer;
     private float cooldownTimer;
 
-    public bool CanUse => !isActive && !onCooldown;
+    public bool CanUse => hasCandle && !isActive && !onCooldown;
 
     private void Awake()
     {
@@ -35,31 +35,30 @@ public class CandleAbility : MonoBehaviour
         if (isActive)
         {
             activeTimer -= Time.deltaTime;
-            if (activeTimer <= 0f)
-            {
-                EndActive();
-            }
+            if (activeTimer <= 0f) EndActive();
             UpdateUIText();
         }
         else if (onCooldown)
         {
             cooldownTimer -= Time.deltaTime;
-            if (cooldownTimer <= 0f)
-            {
-                onCooldown = false;
-            }
+            if (cooldownTimer <= 0f) onCooldown = false;
             UpdateUIText();
         }
     }
 
-    public void ActivateCandle()
+    public void UnlockCandle()
+    {
+        hasCandle = true;
+        UpdateUIText();
+    }
+
+    public void TryActivate()
     {
         if (!CanUse || playerCandleLightSource == null) return;
 
         isActive = true;
         activeTimer = activeDuration;
         playerCandleLightSource.SetLit(true);
-
         UpdateUIText();
     }
 
@@ -70,23 +69,20 @@ public class CandleAbility : MonoBehaviour
 
         onCooldown = true;
         cooldownTimer = cooldownDuration;
+        UpdateUIText();
     }
 
     private void UpdateUIText()
     {
         if (candleTimerText == null) return;
 
-        if (isActive)
-        {
-            candleTimerText.text = $"Candle Active: {Mathf.CeilToInt(activeTimer)}s";
-        }
-        else if (onCooldown)
-        {
-            candleTimerText.text = $"Candle Cooldown: {Mathf.CeilToInt(cooldownTimer)}s";
-        }
-        else
-        {
+        if (!hasCandle)
             candleTimerText.text = "Hint: Find a candle";
-        }
+        else if (isActive)
+            candleTimerText.text = $"Candle Active: {Mathf.CeilToInt(activeTimer)}s";
+        else if (onCooldown)
+            candleTimerText.text = $"Candle Cooldown: {Mathf.CeilToInt(cooldownTimer)}s";
+        else
+            candleTimerText.text = "Candle Ready";
     }
 }

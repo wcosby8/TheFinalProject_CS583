@@ -9,10 +9,7 @@ public class CandlePickup : MonoBehaviour
         CandleAbility ability = other.GetComponentInParent<CandleAbility>();
         if (ability == null) return;
 
-        if (ability.CanUse)
-        {
-            ability.ActivateCandle();
-            Destroy(gameObject);
-        }
+        ability.UnlockCandle();  
+        Destroy(gameObject);     
     }
 }
