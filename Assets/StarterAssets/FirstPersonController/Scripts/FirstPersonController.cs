@@ -96,6 +96,9 @@ namespace StarterAssets
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 
+		
+		private CandleAbility _candleAbility;
+
 		private const float _threshold = 0.01f;
 
 		private bool IsCurrentDeviceMouse
@@ -129,6 +132,9 @@ namespace StarterAssets
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
 
+			
+			_candleAbility = GetComponent<CandleAbility>();
+
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
@@ -140,6 +146,18 @@ namespace StarterAssets
 
 		private void Update()
 		{
+			// Candle input (added) - use candle like other StarterAssets input booleans
+			if (_input != null && _input.candle)
+			{
+				if (_candleAbility != null)
+				{
+					_candleAbility.TryActivate();
+				}
+
+				
+				_input.candle = false;
+			}
+
 			JumpAndGravity();
 			GroundedCheck();
 			UpdateStamina();
