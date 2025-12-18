@@ -21,6 +21,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class demonDoll : MonoBehaviour {
     [Header("Target")]
@@ -500,7 +501,8 @@ public class demonDoll : MonoBehaviour {
             Debug.Log("Player died! No spheres remaining. Game resetting...");
             if (gameManager != null)
             {
-                gameManager.RestartGame();
+                //gameManager.RestartGame();  
+                SceneManager.LoadScene("GameOverScene");
             }
             else
             {
