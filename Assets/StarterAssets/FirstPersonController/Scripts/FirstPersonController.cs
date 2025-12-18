@@ -47,6 +47,22 @@ namespace StarterAssets
 		[Tooltip("Maximum angle in degrees the player can walk up. 45 = normal, lower = can't climb steep hills")]
 		[Range(0f, 90f)]
 		public float MaxSlopeAngle = 45f;
+		
+		[Header("Stamina")]
+		[Tooltip("Maximum stamina value")]
+		public float MaxStamina = 100f;
+		[Tooltip("How fast stamina depletes while sprinting (per second)")]
+		public float StaminaDepletionRate = 20f;
+		[Tooltip("How fast stamina regenerates when not sprinting (per second)")]
+		public float StaminaRegenRate = 15f;
+		[Tooltip("Delay before stamina starts regenerating after sprinting (seconds)")]
+		public float StaminaRegenDelay = 1f;
+		
+		[SerializeField]
+		private float currentStamina;
+		
+		public float CurrentStamina => currentStamina;
+		public float StaminaPercentage => MaxStamina > 0f ? currentStamina / MaxStamina : 0f;
 
 		[Header("Cinemachine")]
 		[Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
@@ -68,6 +84,9 @@ namespace StarterAssets
 		// timeout deltatime
 		private float _jumpTimeoutDelta;
 		private float _fallTimeoutDelta;
+		
+		// stamina
+		private float _staminaRegenDelayTimer;
 
 	
 #if ENABLE_INPUT_SYSTEM
@@ -113,12 +132,17 @@ namespace StarterAssets
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+			
+			// initialize stamina
+			currentStamina = MaxStamina;
+			_staminaRegenDelayTimer = 0f;
 		}
 
 		private void Update()
 		{
 			JumpAndGravity();
 			GroundedCheck();
+			UpdateStamina();
 			Move();
 		}
 
@@ -158,8 +182,11 @@ namespace StarterAssets
 
 		private void Move()
 		{
+			//check if player can sprint (has stamina and is pressing sprint)
+			bool canSprint = _input.sprint && currentStamina > 0f;
+			
 			// set target speed based on move speed, sprint speed and if sprint is pressed
-			float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+			float targetSpeed = canSprint ? SprintSpeed : MoveSpeed;
 
 			// a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
@@ -312,6 +339,35 @@ namespace StarterAssets
 			return Mathf.Clamp(lfAngle, lfMin, lfMax);
 		}
 
+		/// <summary>
+		/// Update stamina based on sprinting state
+		/// </summary>
+		private void UpdateStamina()
+		{
+			//if sprinting and moving, deplete stamina
+			if (_input.sprint && _input.move != Vector2.zero && currentStamina > 0f)
+			{
+				currentStamina -= StaminaDepletionRate * Time.deltaTime;
+				currentStamina = Mathf.Max(0f, currentStamina);
+				_staminaRegenDelayTimer = StaminaRegenDelay; //reset regen delay
+			}
+			//if not sprinting or not moving, regenerate stamina
+			else
+			{
+				//wait for regen delay before regenerating
+				if (_staminaRegenDelayTimer > 0f)
+				{
+					_staminaRegenDelayTimer -= Time.deltaTime;
+				}
+				else
+				{
+					//regenerate stamina
+					currentStamina += StaminaRegenRate * Time.deltaTime;
+					currentStamina = Mathf.Min(MaxStamina, currentStamina);
+				}
+			}
+		}
+		
 		/// <summary>
 		/// Get the angle of the slope the player is currently standing on
 		/// Uses a precise check to only detect the surface directly beneath the player
