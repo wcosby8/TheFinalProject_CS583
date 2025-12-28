@@ -56,7 +56,12 @@ public class demonDoll : MonoBehaviour {
     [Tooltip("Cooldown between contact attempts (seconds)")]
     public float contactCooldown = 1f;
     
+    [Header("Audio")]
+    [Tooltip("Sound played when stealing sphere or killing player")]
+    public AudioClip killedOrCollectableStolenNoise;
+    
     private NavMeshAgent agent;
+    private AudioSource audioSource;
     private List<LightSource> nearbyLights = new List<LightSource>();
     private LightSource closestLight = null;
     private bool isInFearRadius = false;       // Inside inner panic radius
@@ -72,6 +77,14 @@ public class demonDoll : MonoBehaviour {
     void Awake() {
         // Get the NavMeshAgent on this enemy
         agent = GetComponent<NavMeshAgent>();
+        
+        // Get or create audio source
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+        }
 
         // If no player is plugged into the Inspector, try finding them by tag
         GameObject player = null;
@@ -483,6 +496,12 @@ public class demonDoll : MonoBehaviour {
         
         // Reset cooldown
         contactCooldownTimer = contactCooldown;
+        
+        // Play steal/death sound
+        if (audioSource != null && killedOrCollectableStolenNoise != null)
+        {
+            audioSource.PlayOneShot(killedOrCollectableStolenNoise);
+        }
         
         // Check if player has spheres
         if (playerInventory.NumberOfSpheres > 0)

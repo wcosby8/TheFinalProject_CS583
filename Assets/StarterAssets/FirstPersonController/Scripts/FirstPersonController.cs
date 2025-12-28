@@ -71,6 +71,20 @@ namespace StarterAssets
 		public float TopClamp = 90.0f;
 		[Tooltip("How far in degrees can you move the camera down")]
 		public float BottomClamp = -90.0f;
+		
+		[Header("Audio")]
+		[Tooltip("Sound played when jumping (ground impact)")]
+		public AudioClip groundJumpNoise;
+		[Tooltip("Sound played when jumping (grunt)")]
+		public AudioClip jumpGruntNoise;
+		[Tooltip("Sound played when walking (single step)")]
+		public AudioClip walkingStep;
+		[Tooltip("Sound played when running (multiple steps)")]
+		public AudioClip runningSteps;
+		[Tooltip("Time between footstep sounds when walking (seconds)")]
+		public float walkingStepInterval = 0.5f;
+		[Tooltip("Time between footstep sounds when running (seconds)")]
+		public float runningStepInterval = 0.3f;
 
 		// cinemachine
 		private float _cinemachineTargetPitch;
@@ -87,6 +101,14 @@ namespace StarterAssets
 		
 		// stamina
 		private float _staminaRegenDelayTimer;
+		
+		// audio
+		private AudioSource _audioSource;
+		private float _footstepTimer = 0f;
+		private bool _wasGrounded = false;
+		private bool _hasPlayedJumpSoundThisJump = false;
+		private float _previousVerticalVelocity = 0f;
+		private bool _isPlayingFootstep = false;
 
 	
 #if ENABLE_INPUT_SYSTEM
@@ -142,6 +164,16 @@ namespace StarterAssets
 			// initialize stamina
 			currentStamina = MaxStamina;
 			_staminaRegenDelayTimer = 0f;
+			
+			// get or create audio source
+			_audioSource = GetComponent<AudioSource>();
+			if (_audioSource == null)
+			{
+				_audioSource = gameObject.AddComponent<AudioSource>();
+				_audioSource.playOnAwake = false;
+			}
+			
+			_wasGrounded = Grounded;
 		}
 
 		private void Update()
@@ -162,6 +194,7 @@ namespace StarterAssets
 			GroundedCheck();
 			UpdateStamina();
 			Move();
+			UpdateFootsteps();
 		}
 
 		private void LateUpdate()
@@ -306,6 +339,9 @@ namespace StarterAssets
 				{
 					_verticalVelocity = -2f;
 				}
+				
+				// Reset jump sound flag when grounded (ready for next jump)
+				_hasPlayedJumpSoundThisJump = false;
 
 				// Check if we're on a steep slope before allowing jump
 				bool canJump = true;
@@ -320,6 +356,13 @@ namespace StarterAssets
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
 					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+					
+					//play jump sounds (only once per jump - check flag and velocity change)
+					if (!_hasPlayedJumpSoundThisJump && _previousVerticalVelocity <= 0f)
+					{
+						PlayJumpSounds();
+						_hasPlayedJumpSoundThisJump = true;
+					}
 				}
 
 				// jump timeout
@@ -348,6 +391,9 @@ namespace StarterAssets
 			{
 				_verticalVelocity += Gravity * Time.deltaTime;
 			}
+			
+			// Track vertical velocity for jump sound detection
+			_previousVerticalVelocity = _verticalVelocity;
 		}
 
 		private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
@@ -410,6 +456,102 @@ namespace StarterAssets
 			}
 			
 			return 0f;
+		}
+
+		/// <summary>
+		/// Play jump sounds (ground jump and grunt)
+		/// </summary>
+		private void PlayJumpSounds()
+		{
+			if (_audioSource == null) return;
+			
+			// Play ground jump noise
+			if (groundJumpNoise != null)
+			{
+				_audioSource.PlayOneShot(groundJumpNoise);
+			}
+			
+			// Play grunt noise with a small delay to prevent overlap
+			if (jumpGruntNoise != null)
+			{
+				StartCoroutine(PlayDelayedSound(jumpGruntNoise, 0.05f));
+			}
+		}
+		
+		/// <summary>
+		/// Coroutine to play a sound after a delay
+		/// </summary>
+		private System.Collections.IEnumerator PlayDelayedSound(AudioClip clip, float delay)
+		{
+			yield return new WaitForSeconds(delay);
+			if (_audioSource != null && clip != null)
+			{
+				_audioSource.PlayOneShot(clip);
+			}
+		}
+		
+		/// <summary>
+		/// Coroutine to reset footstep flag after sound finishes
+		/// </summary>
+		private System.Collections.IEnumerator ResetFootstepFlag(float duration)
+		{
+			yield return new WaitForSeconds(duration);
+			_isPlayingFootstep = false;
+		}
+		
+		/// <summary>
+		/// Update footstep sounds based on movement
+		/// </summary>
+		private void UpdateFootsteps()
+		{
+			if (_audioSource == null) return;
+			
+			// Only play footsteps when grounded and moving
+			if (Grounded && _speed > 0.1f)
+			{
+				// Check if we just landed (wasn't grounded before)
+				if (!_wasGrounded)
+				{
+					// Play landing sound
+					if (groundJumpNoise != null)
+					{
+						_audioSource.PlayOneShot(groundJumpNoise);
+					}
+				}
+				
+				// Update footstep timer
+				_footstepTimer -= Time.deltaTime;
+				
+				if (_footstepTimer <= 0f && !_isPlayingFootstep)
+				{
+					// Determine if sprinting or walking (check speed threshold too)
+					bool isSprinting = _input.sprint && currentStamina > 0f && _speed >= SprintSpeed * 0.7f;
+					
+					if (isSprinting && runningSteps != null)
+					{
+						_isPlayingFootstep = true;
+						_audioSource.PlayOneShot(runningSteps);
+						_footstepTimer = runningStepInterval;
+						// Reset flag after sound duration
+						StartCoroutine(ResetFootstepFlag(runningSteps.length));
+					}
+					else if (!isSprinting && walkingStep != null)
+					{
+						_isPlayingFootstep = true;
+						_audioSource.PlayOneShot(walkingStep);
+						_footstepTimer = walkingStepInterval;
+						// Reset flag after sound duration
+						StartCoroutine(ResetFootstepFlag(walkingStep.length));
+					}
+				}
+			}
+			else
+			{
+				// Reset timer when not moving or not grounded
+				_footstepTimer = 0f;
+			}
+			
+			_wasGrounded = Grounded;
 		}
 
 		private void OnDrawGizmosSelected()

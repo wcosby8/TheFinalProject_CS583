@@ -14,7 +14,7 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 1
+  m_Fog: 0
   m_FogColor: {r: 0.003921569, g: 0.003921569, b: 0.003921569, a: 1}
   m_FogMode: 2
   m_FogDensity: 0.07
@@ -820,12 +820,14 @@ MonoBehaviour:
   normalSpeed: 6
   slowedSpeed: 2
   speedIncreasePerSphere: 1
+  speedDecreasePerDeposit: 0.5
   lightDetectionRadius: 15
   lightFearRadius: 7
   retreatSpeed: 10
   retreatBuffer: 3
   contactDistance: 2
   contactCooldown: 1
+  killedOrCollectableStolenNoise: {fileID: 8300000, guid: d97e805d13d964000a1e08a79ca32e71, type: 3}
 --- !u!195 &144947835
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1186,7 +1188,7 @@ MonoBehaviour:
   interactionPrompt: {fileID: 335773483}
   depositEffect: {fileID: 0}
   altarLight: {fileID: 0}
-  depositSound: {fileID: 0}
+  depositSound: {fileID: 8300000, guid: 0d5300abead1941e28b47ac44f40eefd, type: 3}
   OnSphereDeposited:
     m_PersistentCalls:
       m_Calls: []
@@ -11113,6 +11115,14 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: walkingStep
+      value: 
+      objectReference: {fileID: 8300000, guid: b3e9cdac26b78934197456d8199e30bc, type: 3}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: runningSteps
+      value: 
+      objectReference: {fileID: 8300000, guid: 7a1da8275935858428d3af22a10ab810, type: 3}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       propertyPath: MaxSlopeAngle
       value: 60
       objectReference: {fileID: 0}
@@ -11121,8 +11131,24 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: jumpGruntNoise
+      value: 
+      objectReference: {fileID: 8300000, guid: 4dd3709bc57e142658a6b53f15346ce6, type: 3}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: groundJumpNoise
+      value: 
+      objectReference: {fileID: 8300000, guid: 65713fdea647c1949961f91d42bed416, type: 3}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       propertyPath: GroundLayers.m_Bits
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: runningStepInterval
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 453084650579209848, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
+      propertyPath: walkingStepInterval
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 937451010987979973, guid: 035bf1ba97d19214580cfe6f5a29fdc3, type: 3}
       propertyPath: m_LocalPosition.x
