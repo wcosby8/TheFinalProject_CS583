@@ -1,7 +1,7 @@
 # The final project
 
-## Final Gameplay Video
-- https://www.youtube.com/watch?v=LcEBS13N2hY
+## Final Gameplay Video(w/ sound effects)
+- https://www.youtube.com/watch?v=JKfNfsj0P_0
 
 ## Halfway Point Gameplay Video
 - https://us05web.zoom.us/clips/share/D4Sm3_WnQPi4xIY3wjfcjw
